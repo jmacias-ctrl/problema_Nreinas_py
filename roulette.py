@@ -7,8 +7,7 @@ def roulette(size, items, sum_items):
         proportion[i] = items[i]/sum_items 
         if(i>0):
             proportion[i]+=proportion[i-1]
-    random.seed(datetime.now().timestamp())
-    rng = random.uniform(0,1)
+    rng = np.random.random()
     index_1 = 0
     index_2 = 0
     for i in range(size):
@@ -18,8 +17,7 @@ def roulette(size, items, sum_items):
             index_1 = i
 
     while True:
-        random.seed(datetime.now().timestamp())
-        rng2 = random.uniform(0,1)
+        rng2 = np.random.random()
         for i in range(size):
             if(proportion[i]==1):
                 break
