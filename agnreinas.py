@@ -26,10 +26,19 @@ for i in range(num_iterations):
     population = set_new_populatiopn(population, population_size, fitness, table_size, cross_prob, total_fitness, mutation_prob)
     fitness, total_fitness = calculate_fitness(population, population_size, table_size)
     index = fitness.argmin()
-    print('Generation '+str(i)+":")
+    print('Generation '+str(i+1)+":")
     print('Fitness: '+str(fitness[index])+' Queens Positions:',population[index])
     if(fitness[index]==0):
         print('Solución encontrada')
+        for position in population[index]:
+            for i in range(1,position+1):
+                if(i==position):
+                    print('*', end='')
+                else:
+                    print('-', end='')
+            for i in range(position+1, table_size+1):
+                print('-', end='')
+            print()
         break
 t1_stop = process_time()
 print('Proceso terminado en '+str(t1_stop - t1_start)+' segundos')

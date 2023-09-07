@@ -6,7 +6,7 @@ import random as rng
 from roulette import *
 
 def setSeed(getSeed):
-    np.random.default_rng(getSeed)
+    np.random.seed(getSeed)
 
 def initiate_population(seed, population_size, table_size):
     population = np.zeros(shape=(population_size, table_size), dtype=int)
@@ -79,8 +79,8 @@ def gen_cross(population, cross_mutation, table_size, indexInd1, indexInd2):
         genF1, genF2 = population[indexInd1][:indices], population[indexInd2][indices:]
     else:
         genF1, genF2 = population[indexInd2][:indices], population[indexInd1][indices:]
-    genS = mutation(np.concatenate((genF2,genF1)), cross_mutation, table_size)
-    return gen_cross_correction(genS, table_size)
+    genS = gen_cross_correction(np.concatenate((genF2,genF1)), table_size)
+    return mutation(genS, cross_mutation, table_size)
     
 def gen_cross_correction(genS, table_size):
     seenValues = np.zeros(table_size, dtype=int)
