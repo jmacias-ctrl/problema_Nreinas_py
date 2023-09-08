@@ -53,7 +53,7 @@ def calculate_fitness(population, population_size, table_size):
         pos+=1
     return fitness, totalFitness
     
-def set_new_populatiopn(population, population_size, fitness, table_size, cross_prob, total_fitness, mutation_prob):
+def set_new_population(population, population_size, fitness, table_size, cross_prob, total_fitness, mutation_prob):
     new_population = np.zeros(shape=(population_size, table_size), dtype=int)
     i = 0
     while(i<population_size):
@@ -61,8 +61,10 @@ def set_new_populatiopn(population, population_size, fitness, table_size, cross_
         randomNumber = np.random.random()
         if(randomNumber<=cross_prob):
             newIndividual = gen_cross(population, mutation_prob, table_size,cross_indv1,cross_indv2)
+            newIndividual2 = gen_cross(population, mutation_prob, table_size,cross_indv2,cross_indv1)
             new_population[i] = newIndividual
-            i+=1
+            new_population[i+1] = newIndividual2
+            i+=2
     new_fitness, total_fitnes= calculate_fitness(new_population, population_size, table_size)
     atFitness = np.append(new_fitness,fitness)
     atPopulation = np.concatenate((new_population, population))

@@ -11,18 +11,16 @@ def roulette(size, items, sum_items):
     index_1 = 0
     index_2 = 0
     for i in range(size):
-        if(proportion[i]==1):
-            break
-        elif(proportion[i]<=rng and proportion[i+1]>=rng):
+        if(rng<proportion[i]):
             index_1 = i
-
+            break
     while True:
         rng2 = np.random.random()
         for i in range(size):
-            if(proportion[i]==1):
-                break
-            elif(proportion[i]<=rng2 and proportion[i+1]>=rng2):
+            if(rng2<proportion[i]):
                 index_2 = i
+                break
         if(index_1 != index_2):
             break
+    
     return index_1, index_2
