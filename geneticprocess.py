@@ -5,10 +5,19 @@ import sys
 import random as rng
 from roulette import *
 
+#Entrada: getSeed->Numero Seed para establecer el generador de numeros aleatorios
+#Salida: True
 def setSeed(getSeed):
     np.random.seed(getSeed)
+    return True
 
-def initiate_population(seed, population_size, table_size):
+#Entradas: 
+#- population_size->Tamaño de la poblacion
+#- table_size->tamaño del tablero de ajedrez (tambien indica cuantas reinas deben haber por filas)
+#Salida:
+#Retorna un array 2d de tamaño population_size x table_size de genes generado de manera aleatoria
+#mediante creaciones de arrays de tamaño de table_size con la funcion shuffle para desordernar el array.
+def initiate_population(population_size, table_size):
     population = np.zeros(shape=(population_size, table_size), dtype=int)
     for i in range(population_size):
         x = np.arange(1, table_size+1)
@@ -16,6 +25,14 @@ def initiate_population(seed, population_size, table_size):
         population[i] = x
     return population
 
+#Entradas:
+#- population->Array 2d de tamaño poblacion_size x table_size, donde las filas son los cromosomas y cada gen de un cromosoma es un posicion de una reina en una fila
+#- population_size->Tamaño de la poblacion
+#- table_size->tamaño del tablero de ajedrez (tambien indica cuantas reinas deben haber por filas)
+#Salida:
+#Retorna el valor fitness de cada gen dentro de la poblacion, siendo un arary 1d de tamaño poblacion_size, siendo este el calculo de la cantidad
+#de choques que se tienen cada reinas con otras reinas, siendo 0 cuando no hay reinas que se chocan entre si, tambien retorna el valor total de fitness
+#que es la suma de todos los fitness del array
 def calculate_fitness(population, population_size, table_size):
     fitness = np.zeros(population_size, dtype=int)
     totalFitness = 0
@@ -52,7 +69,18 @@ def calculate_fitness(population, population_size, table_size):
         totalFitness+=set_fitness
         pos+=1
     return fitness, totalFitness
-    
+
+#Entrada:
+#- population->Array 2d de tamaño poblacion_size x table_size, donde las filas son los cromosomas y cada gen de un cromosoma es un posicion de una reina en una fila
+#- population_size->Tamaño de la poblacion
+#- table_size->tamaño del tablero de ajedrez (tambien indica cuantas reinas deben haber por filas)
+#- fitness->El valor fitness de cada fila del array population
+#- cross_prob->la probabilidad de cruza entre dos cromosomas (en este caso dos tableros de tamaño table_size con posiciones de table_size reinas)
+#- mutation_prob->la probabilidad de mutacion en un hijo
+#- total_fitness->la sumatoria de todos los fitness
+#Salida:
+#Un array 2d de tamaño population_size x table_size llamado new_population que contiene los hijos que son obtenidos cruzando de una seleccion aleatoria de padres del array 2d population
+#y tambien padres que tengan el mejor fitness (esten mas cercano a una solucion)
 def set_new_population(population, population_size, fitness, table_size, cross_prob, total_fitness, mutation_prob):
     new_population = np.zeros(shape=(population_size, table_size), dtype=int)
     i = 0
@@ -60,8 +88,8 @@ def set_new_population(population, population_size, fitness, table_size, cross_p
         cross_indv1, cross_indv2 = roulette(population_size,fitness,total_fitness)
         randomNumber = np.random.random()
         if(randomNumber<=cross_prob):
-            newIndividual = gen_cross(population, mutation_prob, table_size,cross_indv1,cross_indv2)
-            newIndividual2 = gen_cross(population, mutation_prob, table_size,cross_indv2,cross_indv1)
+            newIndividual = chromosome_cross(population, mutation_prob, table_size,cross_indv1,cross_indv2)
+            newIndividual2 = chromosome_cross(population, mutation_prob, table_size,cross_indv2,cross_indv1)
             new_population[i] = newIndividual
             new_population[i+1] = newIndividual2
             i+=2
@@ -74,37 +102,65 @@ def set_new_population(population, population_size, fitness, table_size, cross_p
         best_individuals[i] = atPopulation[best_fitness[i]]
     return best_individuals
 
-def gen_cross(population, cross_mutation, table_size, indexInd1, indexInd2):
+
+#Entrada:
+#- population->Array 2d de tamaño poblacion_size x table_size, donde las filas son los cromosomas y cada gen de un cromosoma es un posicion de una reina en una fila
+#- mutation_prob->la probabilidad de mutacion en un hijo
+#- table_size->tamaño del tablero de ajedrez (tambien indica cuantas reinas deben haber por filas)
+#- indexInd1->El primer cromosoma (o tambien fila del array de population) en que sera utilizado para la cruza
+#- indexInd2->El segundo cromosoma (o tambien fila del array de population) en que sera utilizado para la cruza
+#Salida:
+#Retorna un hijo que fue obtenido siempre y cuando este dentro de la probabilidad, del padre de population[indexInd1] y population[indexInd2], indices que fueron
+#obtenidos por ruleta, siendo la seleccion de una cantidad aleatoria de genes tanto para el primer padre como el segundo
+#Tambien es posible que el hijo pueda mutar, siempre y cuando este dentro de la posiblidad.
+def chromosome_cross(population, cross_mutation, table_size, indexInd1, indexInd2):
     indices = np.random.randint(2, table_size)
     rngSplit = np.random.random()
     if(rngSplit>=0.6):
-        genF1, genF2 = population[indexInd1][:indices], population[indexInd2][indices:]
+        chromosomeF1, chromosomeF2 = population[indexInd1][:indices], population[indexInd2][indices:]
     else:
-        genF1, genF2 = population[indexInd2][:indices], population[indexInd1][indices:]
-    genS = gen_cross_correction(np.concatenate((genF2,genF1)), table_size)
-    return mutation(genS, cross_mutation, table_size)
-    
-def gen_cross_correction(genS, table_size):
+        chromosomeF1, chromosomeF2 = population[indexInd2][:indices], population[indexInd1][indices:]
+    chromsomeFinal = chromosome_cross_correction(np.concatenate((chromosomeF2,chromosomeF1)), table_size)
+    return mutation(chromsomeFinal, cross_mutation, table_size)
+
+
+#Entrada:
+#- chromosomeFinal->Es el hijo (array de tamaño table_size con los valores de las posiciones de table_size reinas) obtenido a partir de dos padres
+#- table_size->tamaño del tablero de ajedrez (tambien indica cuantas reinas deben haber por filas)
+#Salida:
+#Durante la cruza, es posible que hayan numeros que se repitan en el array del hijo, esto significa que hay reinas que se estan chocando ded manera
+#vertical, esto se soluciona mediante esta solucion, lo que se hace es buscar las posiciones de reinas que se van repitiendo en el array, reemplazandolas
+#por posiciones que no estan dentro del array hijo
+#Retorna el hijo con estas corecciones
+def chromosome_cross_correction(chromsomeFinal, table_size):
     seenValues = np.zeros(table_size, dtype=int)
     indexDuplicate = []
-    for i in range(len(genS)):
-        if(seenValues[genS[i]-1]>0):
+    for i in range(len(chromsomeFinal)):
+        if(seenValues[chromsomeFinal[i]-1]>0):
             indexDuplicate.append(i)
         else:
-            seenValues[genS[i]-1]+=1
+            seenValues[chromsomeFinal[i]-1]+=1
     for j in range(len(seenValues)):
         if(len(indexDuplicate)<=0):
             break
         if(seenValues[j]==0):
-            genS[indexDuplicate.pop()] = j+1     
-    return genS
+            chromsomeFinal[indexDuplicate.pop()] = j+1     
+    return chromsomeFinal
 
-def mutation(genS, cross_mutation, table_size):
+
+#Entrada:
+#- chromosomeFinal->Es el hijo (array de tamaño table_size con los valores de las posiciones de table_size reinas) obtenido a partir de dos padres
+#- table_size->tamaño del tablero de ajedrez (tambien indica cuantas reinas deben haber por filas)
+#- mutation_prob->la probabilidad de mutacion en un hijo
+#Salida:
+#Retorna el hijo obtenido de dos padres con una mutacion, siempre y cuando de la posibilidad de hacerlo, con una probablidad de cross_mutation
+#Si no esta dentro de la probabilidad, entonces no muta y retorna el hijo tal cual como se recibio
+def mutation(chromsomeFinal, cross_mutation, table_size):
     randomNumber = np.random.random()
     if(randomNumber <= cross_mutation):
         randomIndex2 = np.random.randint(1,table_size-1)
         randomIndex = np.random.randint(1, table_size-1)
-        value = genS[randomIndex]
-        genS[randomIndex] = genS[randomIndex2]
-        genS[randomIndex2] = value
-    return genS
+        value = chromsomeFinal[randomIndex]
+        chromsomeFinal[randomIndex] = chromsomeFinal[randomIndex2]
+        chromsomeFinal[randomIndex2] = value
+    return chromsomeFinal
