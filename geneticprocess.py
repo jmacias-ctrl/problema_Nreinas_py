@@ -91,7 +91,9 @@ def set_new_population(population, population_size, fitness, table_size, cross_p
             newIndividual = chromosome_cross(population, mutation_prob, table_size,cross_indv1,cross_indv2)
             newIndividual2 = chromosome_cross(population, mutation_prob, table_size,cross_indv2,cross_indv1)
             new_population[i] = newIndividual
-            new_population[i+1] = newIndividual2
+            if((i+1)<population_size):
+                new_population[i+1] = newIndividual2
+            
             i+=2
     new_fitness, total_fitnes= calculate_fitness(new_population, population_size, table_size)
     atFitness = np.append(new_fitness,fitness)
