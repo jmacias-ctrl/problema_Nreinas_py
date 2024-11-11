@@ -1,1 +1,1 @@
-# Tarea1_Nreinas
+# Solución del problema de las N Reinas en Python
